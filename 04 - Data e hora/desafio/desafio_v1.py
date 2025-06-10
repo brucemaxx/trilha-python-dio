@@ -1,6 +1,7 @@
 import textwrap
 from abc import ABC, abstractclassmethod, abstractproperty
-from datetime import datetime
+from datetime import datetime, date 
+
 
 
 class ContasIterador:
@@ -34,8 +35,11 @@ class Cliente:
 
     def realizar_transacao(self, conta, transacao):
         # TODO: validar o número de transações e invalidar a operação se for necessário
-        # print("\n@@@ Você excedeu o número de transações permitidas para hoje! @@@")
-        transacao.registrar(conta)
+        transacoes_hoje = conta.historico.transacoes_do_dia()
+        if len(transacoes_hoje) >= 10:
+            print("\n@@@ Você excedeu o número de transações permitidas para hoje! @@@")
+            return
+        transacao.registrar(conta) 
 
     def adicionar_conta(self, conta):
         self.contas.append(conta)
@@ -170,7 +174,11 @@ class Historico:
 
     # TODO: filtrar todas as transações realizadas no dia
     def transacoes_do_dia(self):
-        pass
+        hoje = date.today().strftime("%d-%m-&Y")
+        return [
+            transacao for transacao in self._transacoes
+            if transacao["data"].startswith(hoje)
+        ]
 
 
 class Transacao(ABC):
@@ -307,7 +315,8 @@ def exibir_extrato(clientes):
     tem_transacao = False
     for transacao in conta.historico.gerar_relatorio():
         tem_transacao = True
-        extrato += f"\n{transacao['tipo']}:\n\tR$ {transacao['valor']:.2f}"
+        # Corrigido para exibir Data/Hora
+        extrato += f"\n{transacao['tipo']}:\n\tR$ {transacao['valor']:.2f}\n\tData/Hora: {transacao['data']}"
 
     if not tem_transacao:
         extrato = "Não foram realizadas movimentações"
